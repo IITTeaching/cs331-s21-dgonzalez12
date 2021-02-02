@@ -22,7 +22,14 @@ def captured_output():
 
 # implement this function
 def is_perfect(n):
-    pass
+    sum = 0
+    for x in range(1, n):
+        if n % x == 0:
+            sum += x
+    if sum == n:
+        return True
+    return False
+
 
 # (3 points)
 def test1():
@@ -40,7 +47,13 @@ def test1():
 
 # implement this function
 def multiples_of_3_and_5(n):
-    pass
+    sum = 0
+    for x in range(0, n, 3):
+        sum += x
+    for x in range(0, n, 5):
+        if (x % 3) != 0:
+            sum += x
+    return sum
 
 # (3 points)
 def test2():
@@ -53,7 +66,19 @@ def test2():
 # EXERCISE 3
 #################################################################################
 def integer_right_triangles(p):
-    pass
+    count = 0
+    taken = [] #list of the y values that have already been used
+    for x in range(1, int(p/3)+1):
+        while(x in taken):
+            x = x+1
+        for y in range(1, p-x):
+            z = p-x-y
+            if (x**2 + y**2) == z**2:
+                taken.append(y)
+                count += 1
+                break
+    return count
+
 
 def test3():
     tc = unittest.TestCase()
@@ -67,7 +92,16 @@ def test3():
 
 # implement this function
 def gen_pattern(chars):
-    pass
+    backwards = chars[::-1]
+    temp = ""
+    length = 1 + (len(chars) - 1) * 4
+    for x in range(1, 2 + (len(chars) - 1) * 2):  # goes through each row
+        temp = backwards[:x] + chars[len(chars) - x + 1:]
+        if (x > len(chars)):
+            y = 2 * len(chars) - x
+            temp = backwards[:y] + chars[len(chars) - y + 1:]
+        print(".".join(temp).center(length, "."))
+
 
 def test4():
     tc = unittest.TestCase()
