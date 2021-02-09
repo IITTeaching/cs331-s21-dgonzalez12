@@ -34,7 +34,16 @@ ROMEO_SOLILOQUY = """
 # Implement this function
 def compute_ngrams(toks, n=2):
     """Returns an n-gram dictionary based on the provided list of tokens."""
-    pass
+    dict = {} #makes the default dictionary
+    for x in range(len(toks)-n+1): #loops through each word until the last one with n-1 words following it
+        temp = [] #creates a temp list to append to the dict
+        for y in range(x+1, x+n): #loops through following n-1 words
+            temp.append(toks[y]) #adds following n-1 words to list
+        try: #checks to see if there is already a list for a given word
+            dict[toks[x]].append(tuple(temp)) #adds a tuple of temp to the list if there is
+        except KeyError:
+            dict[toks[x]] = [tuple(temp)] #creates a key of toks[x] and makes it a list of only the tuple
+    return dict
 
 def test1():
     test1_1()
@@ -93,7 +102,26 @@ def test1_2():
 ################################################################################
 # Implement this function
 def gen_passage(ngram_dict, length=100):
-    pass
+    wonk = []
+    key = random.choice(sorted(ngram_dict.keys())) #gets random key
+    wonk.append(key) #adds the key to the passage
+    chosen = random.choice(ngram_dict[key]) #chooses tuple from list of key
+    for word in chosen:
+        wonk.append(word)
+    x=0
+    while x < (length-2):
+        key = chosen[-1]
+        if key not in ngram_dict.keys():
+            key = random.choice(sorted(ngram_dict.keys()))  # gets random key
+            wonk.append(key)
+            x = x+1
+        if(x == length-2):
+            break
+        chosen = random.choice(ngram_dict[key])  # chosen tuple from list of key
+        for word in chosen:
+            wonk.append(word)
+        x += 1
+    return " ".join(wonk)
 
 # 50 Points
 def test2():
