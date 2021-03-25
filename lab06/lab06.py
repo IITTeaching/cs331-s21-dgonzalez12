@@ -51,6 +51,22 @@ def check_delimiters(expr):
     delim_closers = '})]>'
 
     ### BEGIN SOLUTION
+    stack = Stack()
+    for x in expr:
+        try:
+            if delim_openers.index(x) >= 0:
+                stack.push(x)
+        except ValueError:
+            pass
+        try:
+            if delim_closers.index(x) >= 0:
+                if stack.empty():
+                    return False
+                if delim_openers.index(stack.pop()) != delim_closers.index(x):
+                    return False
+        except ValueError:
+            pass
+    return stack.empty()
     ### END SOLUTION
 
 ################################################################################
@@ -112,6 +128,25 @@ def test_check_delimiters_6():
 # INFIX -> POSTFIX CONVERSION
 ################################################################################
 
+def checks(tok, postfix, ops, prec):
+    if tok.isdigit():
+        postfix.append(tok)
+    elif ops.empty() or ops.top.val == "(" or tok == "(":
+        ops.push(tok)
+    elif tok == ")":
+        ponk = ops.pop()
+        while ponk != "(":
+            postfix.append(ponk)
+            ponk = ops.pop()
+    elif prec[tok] > prec[ops.top.val]:
+        ops.push(tok)
+    elif prec[tok] == prec[ops.top.val]:
+        postfix.append(ops.pop())
+        ops.push(tok)
+    elif prec[tok] < prec[ops.top.val]:
+        postfix.append(ops.pop())
+        checks(tok, postfix, ops, prec)
+
 def infix_to_postfix(expr):
     """Returns the postfix form of the infix expression found in `expr`"""
     # you may find the following precedence dictionary useful
@@ -121,6 +156,10 @@ def infix_to_postfix(expr):
     postfix = []
     toks = expr.split()
     ### BEGIN SOLUTION
+    for tok in toks:
+        checks(tok, postfix, ops, prec)
+    while not ops.empty():
+        postfix.append(ops.pop())
     ### END SOLUTION
     return ' '.join(postfix)
 
@@ -166,19 +205,51 @@ class Queue:
 
     def enqueue(self, val):
         ### BEGIN SOLUTION
+        if ((self.tail + 1) % len(self.data)) == self.head:
+            raise RuntimeError
+        if self.head == -1:
+            self.data[0] = val
+            self.head = 0
+            self.tail = 0
+        else:
+            self.tail = (self.tail + 1) % len(self.data)
+            self.data[self.tail] = val
+
         ### END SOLUTION
 
     def dequeue(self):
         ### BEGIN SOLUTION
+        if self.empty():
+            raise RuntimeError
+        temp = self.data[self.head]
+        self.data[self.head] = None
+        if self.head == self.tail:
+            self.head = -1
+            self.tail = -1
+            return temp
+        self.head = (self.head + 1) % len(self.data)
+        return temp
         ### END SOLUTION
 
     def resize(self, newsize):
         assert(len(self.data) < newsize)
         ### BEGIN SOLUTION
+        temp = [None] * newsize
+        count = 0
+        for x in self:
+            temp[count] = x
+            count += 1
+        self.data = temp
+        self.head = 0
+        self.tail = count - 1
+
         ### END SOLUTION
 
     def empty(self):
         ### BEGIN SOLUTION
+        if self.head == -1:
+            return True
+        return False
         ### END SOLUTION
 
     def __bool__(self):
@@ -194,6 +265,14 @@ class Queue:
 
     def __iter__(self):
         ### BEGIN SOLUTION
+        if self.head <= self.tail:
+            for x in range(self.head, self.tail + 1):
+                yield self.data[x]
+        else:
+            for y in range(self.head, len(self.data)):
+                yield self.data[y]
+            for z in range(self.tail + 1):
+                yield self.data[z]
         ### END SOLUTION
 
 ################################################################################
@@ -220,66 +299,67 @@ def test_queue_implementation_1():
 
 # points: 13
 def test_queue_implementation_2():
-	tc = TestCase()
+    tc = TestCase()
 
-	q = Queue(10)
+    q = Queue(10)
 
-	for i in range(6):
-	    q.enqueue(i)
+    for i in range(6):
+        q.enqueue(i)
 
-	tc.assertEqual(q.data.count(None), 4)
+    tc.assertEqual(q.data.count(None), 4)
 
-	for i in range(5):
-	    q.dequeue()
+    for i in range(5):
+        q.dequeue()
 
-	tc.assertFalse(q.empty())
-	tc.assertEqual(q.data.count(None), 9)
-	tc.assertEqual(q.head, q.tail)
-	tc.assertEqual(q.head, 5)
+    tc.assertFalse(q.empty())
+    tc.assertEqual(q.data.count(None), 9)
+    tc.assertEqual(q.head, q.tail)
+    tc.assertEqual(q.head, 5)
 
-	for i in range(9):
-	    q.enqueue(i)
+    for i in range(9):
+        q.enqueue(i)
 
-	with tc.assertRaises(RuntimeError):
-	    q.enqueue(10)
+    with tc.assertRaises(RuntimeError):
+        q.enqueue(10)
 
-	for x, y in zip(q, [5] + list(range(9))):
-	    tc.assertEqual(x, y)
 
-	tc.assertEqual(q.dequeue(), 5)
-	for i in range(9):
-	    tc.assertEqual(q.dequeue(), i)
+    for x, y in zip(q, [5] + list(range(9))):
+        tc.assertEqual(x, y)
 
-	tc.assertTrue(q.empty())
+    tc.assertEqual(q.dequeue(), 5)
+    for i in range(9):
+        tc.assertEqual(q.dequeue(), i)
+
+    tc.assertTrue(q.empty())
 
 # points: 14
 def test_queue_implementation_3():
-	tc = TestCase()
+    tc = TestCase()
 
-	q = Queue(5)
-	for i in range(5):
-	    q.enqueue(i)
-	for i in range(4):
-	    q.dequeue()
-	for i in range(5, 9):
-	    q.enqueue(i)
+    q = Queue(5)
+    for i in range(5):
+        q.enqueue(i)
+    for i in range(4):
+        q.dequeue()
+    for i in range(5, 9):
+        q.enqueue(i)
 
-	with tc.assertRaises(RuntimeError):
-	    q.enqueue(10)
+    with tc.assertRaises(RuntimeError):
+        q.enqueue(10)
 
-	q.resize(10)
+    q.resize(10)
 
-	for x, y in zip(q, range(4, 9)):
-	    tc.assertEqual(x, y)
+    for x, y in zip(q, range(4, 9)):
+        tc.assertEqual(x, y)
 
-	for i in range(9, 14):
-	    q.enqueue(i)
+    for i in range(9, 14):
+        q.enqueue(i)
 
-	for i in range(4, 14):
-	    tc.assertEqual(q.dequeue(), i)
+    for i in range(4, 14):
+        tc.assertEqual(q.dequeue(), i)
 
-	tc.assertTrue(q.empty())
-	tc.assertEqual(q.head, -1)
+    tc.assertTrue(q.empty())
+    tc.assertEqual(q.head, -1)
 
 ################################################################################
 # TEST HELPERS
