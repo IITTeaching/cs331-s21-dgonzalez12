@@ -22,12 +22,52 @@ class Heap:
     def _right(idx):
         return idx*2+2
 
+    def swap(self, child, parent):
+        cval = self.data[child]
+        pval = self.data[parent]
+        self.data[child] = pval
+        self.data[parent] = cval
+
+    def exist(self, idx):
+        return idx < len(self)
+
     def heapify(self, idx=0):
         ### BEGIN SOLUTION
+        if len(self) > 0:
+            rc = self._right(idx)
+            lc = self._left(idx)
+            cval = self.data[idx]
+            if self.exist(lc):
+                lval = self.data[lc]
+                if self.exist(rc):
+                    rval = self.data[rc]
+                    if self.key(rval) > self.key(cval) or self.key(lval) > self.key(cval):
+                        if self.key(lval) > self.key(rval):
+                            self.swap(lc, idx)
+                            self.heapify(lc)
+                        else:
+                            self.swap(rc, idx)
+                            self.heapify(rc)
+                elif self.key(lval) > self.key(cval):
+                    self.swap(lc, idx)
+                    self.heapify(lc)
         ### END SOLUTION
+
+    def trickleUp(self, idx):
+        p = self._parent(idx)
+        if idx > 0:
+            cval = self.data[idx]
+            pval = self.data[p]
+            if self.key(pval) < self.key(cval):
+                self.swap(idx, p)
+                self.trickleUp(p)
+
+
 
     def add(self, x):
         ### BEGIN SOLUTION
+        self.data.append(x)
+        self.trickleUp(len(self) - 1)
         ### END SOLUTION
 
     def peek(self):
@@ -130,6 +170,31 @@ def test_key_heap_5():
 ################################################################################
 def running_medians(iterable):
     ### BEGIN SOLUTION
+    greater = Heap(lambda x:-x)
+    less = Heap()
+    med = []
+    for val in iterable:
+        #manipulate heaps
+        if len(med) == 0:           #initial run
+            med.append(val)
+            less.add(val)
+        else:                       #subsequent runs adding to heaps
+            if val > med[-1]:
+                greater.add(val)
+            else:
+                less.add(val)
+            if len(greater) - len(less) > 1:        #checks for if either is much greater than other
+                less.add(greater.pop())
+            elif len(less) - len(greater) > 1:
+                greater.add(less.pop())
+
+            if len(less) > len(greater):
+                med.append(less.peek())
+            elif len(greater) > len(less):
+                med.append(greater.peek())
+            else:
+                med.append((less.peek() + greater.peek())/2)
+    return med
     ### END SOLUTION
 
 ################################################################################
@@ -174,6 +239,17 @@ def test_median_3():
 ################################################################################
 def topk(items, k, keyf):
     ### BEGIN SOLUTION
+    minh = Heap(lambda x:-keyf(x))
+    for item in items:
+        if len(minh) < k:
+            minh.add(item)
+        elif keyf(minh.peek()) < keyf(item):
+            minh.pop()
+            minh.add(item)
+    temp = minh.data
+    temp.reverse()
+    return temp
+
     ### END SOLUTION
 
 ################################################################################
