@@ -8,13 +8,21 @@ class AVLTree:
             self.left = left
             self.right = right
 
+
+        def bf(self):
+            return self.height(self.right) - self.height(self.left)
+
         def rotate_right(self):
             n = self.left
             self.val, n.val = n.val, self.val
             self.left, n.left, self.right, n.right = n.left, n.right, n, self.right
 
+
         def rotate_left(self):
             ### BEGIN SOLUTION
+            x = self.right
+            self.val, x.val = x.val, self.val
+            self.right, x.right, self.left, x.left = x.right, x.left, x, self.left
             ### END SOLUTION
 
         @staticmethod
@@ -31,16 +39,86 @@ class AVLTree:
     @staticmethod
     def rebalance(t):
         ### BEGIN SOLUTION
+        if t.bf() <= -2:
+            if t.left.bf() < 0:
+                t.rotate_right()
+            else:
+                t.left.rotate_left()
+                t.rotate_right()
+        elif t.bf() >= 2:
+            if t.right.bf() > 0:
+                t.rotate_left()
+            else:
+                t.right.rotate_right()
+                t.rotate_left()
+        #if t.bf() == -2 or t.bf() == 2:
+        #    AVLTree.rebalance(t)
         ### END SOLUTION
 
     def add(self, val):
         assert(val not in self)
         ### BEGIN SOLUTION
+        def addhelp(n):
+            if not n:
+                return AVLTree.Node(val)
+            elif val < n.val:
+                n.left = addhelp(n.left)
+                AVLTree.rebalance(n)
+                return n
+            else:
+                n.right = addhelp(n.right)
+                AVLTree.rebalance(n)
+                return n
+        self.root = addhelp(self.root)
+        self.size += 1
         ### END SOLUTION
 
     def __delitem__(self, val):
         assert(val in self)
         ### BEGIN SOLUTION
+        #arr = []
+        def delhelp(n):
+            if val < n.val: #if the node is not the val
+                n.left = delhelp(n.left)
+                #arr.append(n)
+                AVLTree.rebalance(n)
+                return n
+            elif val > n.val:
+                n.right = delhelp(n.right)
+                #arr.append(n)
+                AVLTree.rebalance(n)
+                return n
+            else: #n is val
+                if not n.left and not n.right: #no chil, easy
+                    return None
+                elif n.left and not n.right:
+                    return n.left
+                elif n.right and not n.left:
+                    return n.right #above just replaces with the only child
+                else:
+                    l = n.left
+                    if not l.right:
+                        n.val = l.val
+                        n.left = l.left
+                        if l.left:
+                            AVLTree.rebalance(n.left)
+                        #AVLTree.rebalance(n)
+                    else:
+                        temp = l
+                        l = temp.right
+                        arr = [temp]
+                        while temp.right.right:
+                            temp = temp.right
+                            l = temp.right
+                            arr.append(temp)
+                        temp.right = l.left
+                        n.val = l.val
+                        for gong in range(len(arr) - 1, -1, -1):
+                            AVLTree.rebalance(arr[gong])
+                    AVLTree.rebalance(n)
+                    return n
+        self.root = delhelp(self.root)
+        self.size += -1
         ### END SOLUTION
 
     def __contains__(self, val):
@@ -166,6 +244,7 @@ def test_rl_fix_simple():
 def test_key_order_after_ops():
     tc = TestCase()
     vals = list(range(0, 100000000, 333333))
+    #vals = list(range(0, 100))
     random.shuffle(vals)
 
     t = AVLTree()
@@ -174,6 +253,9 @@ def test_key_order_after_ops():
 
     for _ in range(len(vals) // 3):
         to_rem = vals.pop(random.randrange(len(vals)))
+        #print(to_rem)
+        #print("\n\n\n\n")
+        #t.pprint()
         del t[to_rem]
 
     vals.sort()
@@ -191,6 +273,7 @@ def test_stress_testing():
 
     t = AVLTree()
     vals = list(range(1000))
+    #vals = list(range(50))
     random.shuffle(vals)
     for i in range(len(vals)):
         t.add(vals[i])
@@ -201,10 +284,15 @@ def test_stress_testing():
     random.shuffle(vals)
     for i in range(len(vals)):
         del t[vals[i]]
+        #print(vals[i])
+        #print("\n\n\n\n")
+        #t.pprint()
         for x in vals[i+1:]:
             tc.assertIn(x, t, 'Incorrect element removed from tree')
         for x in vals[:i+1]:
             tc.assertNotIn(x, t, 'Element removed still in tree')
+            #print(x)
+            #t.pprint()
         traverse(t.root, check_balance)
 
 
