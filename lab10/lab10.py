@@ -40,13 +40,13 @@ class AVLTree:
     def rebalance(t):
         ### BEGIN SOLUTION
         if t.bf() <= -2:
-            if t.left.bf() < 0:
+            if t.left.bf() <= 0:
                 t.rotate_right()
             else:
                 t.left.rotate_left()
                 t.rotate_right()
         elif t.bf() >= 2:
-            if t.right.bf() > 0:
+            if t.right.bf() >= 0:
                 t.rotate_left()
             else:
                 t.right.rotate_right()
@@ -273,7 +273,7 @@ def test_stress_testing():
 
     t = AVLTree()
     vals = list(range(1000))
-    #vals = list(range(50))
+    #vals = list(range(200))
     random.shuffle(vals)
     for i in range(len(vals)):
         t.add(vals[i])
